@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wortschatzübung: Kleidung</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f7f6;
+            color: #333;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+        }
+        .instructions {
+            background-color: #fff;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        .word-bank {
+            color: #16a085;
+            font-weight: bold;
+            line-height: 1.6;
+            margin-top: 10px;
+        }
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+        }
+        .card {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .image-crop {
+            width: 140px;
+            height: 140px;
+            margin: 0 auto 10px auto;
+            background-image: url('kleidung.jpg'); /* Geänderter Dateiname! */
+            background-size: 550% 400%; 
+            background-repeat: no-repeat;
+            border-radius: 8px;
+            border: 1px solid #eee;
+        }
+
+        .item-number {
+            background-color: #e0f7fa;
+            color: #00796b;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin: 0 auto;
+        }
+        input {
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 14px;
+            width: 100%;
+            box-sizing: border-box;
+            text-align: center;
+        }
+        input.correct {
+            background-color: #d4edda;
+            border-color: #28a745;
+            color: #155724;
+        }
+        input.incorrect {
+            background-color: #f8d7da;
+            border-color: #dc3545;
+            color: #721c24;
+        }
+        input.revealed {
+            background-color: #e2e3e5;
+            border-color: #383d41;
+            color: #383d41;
+            font-weight: bold;
+        }
+        .check-btn {
+            background-color: #2980b9;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 8px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            margin-top: 5px;
+        }
+        .check-btn:hover:not(:disabled) {
+            background-color: #3498db;
+        }
+        .check-btn:disabled {
+            background-color: #95a5a6;
+            cursor: not-allowed;
+        }
+        .feedback {
+            font-size: 13px;
+            font-weight: bold;
+            min-height: 18px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Ordnen Sie die Kleidungsstücke zu</h1>
+    
+    <div class="instructions">
+        <p>Ordnen Sie die Kleidungsstücke den Bildern zu. Notieren Sie auch die Pluralform.</p>
+        <p class="word-bank">
+            der Anzug • die Bluse • das Hemd • die Hose • die Jacke • die Jeans • das Kleid • der Mantel • 
+            der Pullover • der Rock • das Sakko • der Schuh • die Socke • der Strumpf • das T-Shirt
+        </p>
+    </div>
+
+    <div class="grid-container" id="quiz-grid">
+        </div>
+
+    <script>
+        const quizData = [
+            { id: 1, sing: "der Pullover", plur: "die Pullover", bgPos: "1% 25%" },
+            { id: 2, sing: "die Hose", plur: "die Hosen", bgPos: "25% 25%" },
+            { id: 3, sing: "das T-Shirt", plur: "die T-Shirts", bgPos: "49% 25%" },
+            { id: 4, sing: "die Jacke", plur: "die Jacken", bgPos: "74% 25%" },
+            { id: 5, sing: "die Socke", plur: "die Socken", bgPos: "99% 25%" },
+            { id: 6, sing: "der Anzug", plur: "die Anzüge", bgPos: "1% 60%" },
+            { id: 7, sing: "der Rock", plur: "die Röcke", bgPos: "25% 60%" },
+            { id: 8, sing: "der Schuh", plur: "die Schuhe", bgPos: "49% 60%" },
+            { id: 9, sing: "die Jeans", plur: "die Jeans", bgPos: "74% 60%" },
+            { id: 10, sing: "das Hemd", plur: "die Hemden", bgPos: "99% 60%" },
+            { id: 11, sing: "der Mantel", plur: "die Mäntel", bgPos: "1% 95%" },
+            { id: 12, sing: "der Strumpf", plur: "die Strümpfe", bgPos: "25% 95%" },
+            { id: 13, sing: "die Bluse", plur: "die Blusen", bgPos: "49% 95%" },
+            { id: 14, sing: "das Sakko", plur: "die Sakkos", bgPos: "74% 95%" },
+            { id: 15, sing: "das Kleid", plur: "die Kleider", bgPos: "99% 95%" }
+        ];
+
+        // Hier speichern wir die Fehlversuche für jede ID
+        const attemptsTracker = {};
+
+        const grid = document.getElementById('quiz-grid');
+
+        // Render the cards
+        quizData.forEach(item => {
+            const card = document.createElement('div');
+            card.className = 'card';
+            card.innerHTML = `
+                <div class="item-number">${item.id}</div>
+                <div class="image-crop" style="background-position: ${item.bgPos};"></div>
+                <input type="text" id="sing-${item.id}" placeholder="Singular (z.B. der Anzug)">
+                <input type="text" id="plur-${item.id}" placeholder="Plural (z.B. die Anzüge)">
+                <button class="check-btn" id="btn-${item.id}" onclick="checkSingle(${item.id})">Überprüfen</button>
+                <div class="feedback" id="feedback-${item.id}"></div>
+            `;
+            grid.appendChild(card);
+            
+            // Setze den Zähler für jedes Element anfangs auf 0
+            attemptsTracker[item.id] = 0;
+        });
+
+        function checkSingle(id) {
+            const item = quizData.find(d => d.id === id);
+            
+            const singInput = document.getElementById(`sing-${id}`);
+            const plurInput = document.getElementById(`plur-${id}`);
+            const feedback = document.getElementById(`feedback-${id}`);
+            const button = document.getElementById(`btn-${id}`);
+
+            // Bereinige Benutzereingabe
+            const userSing = singInput.value.trim().toLowerCase();
+            const userPlur = plurInput.value.trim().toLowerCase();
+            const correctSing = item.sing.toLowerCase();
+            const correctPlur = item.plur.toLowerCase();
+
+            let singCorrect = (userSing === correctSing);
+            let plurCorrect = (userPlur === correctPlur);
+
+            // Visuelles Feedback für die Eingabefelder
+            if (singCorrect) {
+                singInput.className = 'correct';
+            } else {
+                singInput.className = 'incorrect';
+            }
+
+            if (plurCorrect) {
+                plurInput.className = 'correct';
+            } else {
+                plurInput.className = 'incorrect';
+            }
+
+            // Logik für Fehlversuche und Feedback
+            if (singCorrect && plurCorrect) {
+                feedback.style.color = "#28a745";
+                feedback.innerText = "✓ Richtig!";
+                
+                // Felder und Button deaktivieren, da komplett gelöst
+                singInput.disabled = true;
+                plurInput.disabled = true;
+                button.disabled = true;
+                button.innerText = "Gelöst";
+            } else {
+                // Bei Fehlversuch: Zähler erhöhen
+                attemptsTracker[id]++;
+                
+                if (attemptsTracker[id] >= 3) {
+                    // Nach 3 Fehlversuchen: Lösung anzeigen
+                    singInput.value = item.sing;
+                    plurInput.value = item.plur;
+                    
+                    // Besonderes Design für aufgedeckte Lösungen
+                    singInput.className = 'revealed';
+                    plurInput.className = 'revealed';
+                    
+                    // Eingabefelder und Button sperren
+                    singInput.disabled = true;
+                    plurInput.disabled = true;
+                    button.disabled = true;
+                    button.innerText = "Lösung angezeigt";
+                    
+                    feedback.style.color = "#383d41";
+                    feedback.innerText = "Lösung wurde automatisch eingefügt.";
+                } else {
+                    // Noch unter 3 Versuchen: Hinweise geben
+                    let verbleibend = 3 - attemptsTracker[id];
+                    feedback.style.color = "#dc3545";
+                    
+                    if (singCorrect || plurCorrect) {
+                        feedback.innerText = `Teilweise richtig! (Noch ${verbleibend} Versuche)`;
+                    } else {
+                        feedback.innerText = `✗ Falsch. (Noch ${verbleibend} Versuche)`;
+                    }
+                }
+            }
+        }
+    </script>
+</body>
+</html>
